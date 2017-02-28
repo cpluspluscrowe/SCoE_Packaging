@@ -3,10 +3,6 @@ import shutil
 from xlwings import *
 import xlwings as xw
 from pprint import pprint
-from Packaging_Setup_Tests import Packaging
-
-testIfReadyToPackage = Packaging()
-testIfReadyToPackage.setUp()
 
 def changeFileName(parentDirectory,file):
     if not "35%_" in file:
@@ -127,13 +123,13 @@ def createGroups():
     wb.close()
     app1.quit()
 
-    
-changePdfNames()
-togManager = TogManager()
-togManager.moveTogFolder()
-togManager.deleteExtraFacilities()
-togManager.changeTogNames()
-createGroups()
+def main():
+    changePdfNames()
+    togManager = TogManager()
+    togManager.moveTogFolder()
+    togManager.deleteExtraFacilities()
+    togManager.changeTogNames()
+    createGroups()
 
 
 
