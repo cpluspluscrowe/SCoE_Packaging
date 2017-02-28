@@ -3,10 +3,11 @@ import shutil
 from xlwings import *
 import xlwings as xw
 from pprint import pprint
-#Must Have folders:
-    #Facilities
-    #Drawings
-        # > PDF & Animations
+from Packaging_Setup_Tests import Packaging
+
+testIfReadyToPackage = Packaging()
+testIfReadyToPackage.setUp()
+
 def changeFileName(parentDirectory,file):
     if not "35%_" in file:
         if not "65%_" in file:
