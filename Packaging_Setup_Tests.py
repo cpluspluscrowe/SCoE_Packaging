@@ -18,6 +18,7 @@ class Packaging(unittest.TestCase):
         self.checkIfAnimationsFolderExistsOrHasBeenCreated()
         self.checkchangeFileNameFunction()
         self.checkchangeFileNameFunction65Percent()
+        self.eachFileHasCoverSheet()
         print("Done!")
         self.assertEqual(3,4)
     def checkIfDrawingFolderExists(self):
@@ -77,7 +78,27 @@ class Packaging(unittest.TestCase):
             print(e)
             print("65% to 35% file conversion failed, look at checkchangeFileNameFunction")
         os.remove(newPath)
+    def eachFileHasCoverSheet(self):
+        self.facilityPath = r"C:\Pkgs\Facilities"
+        for section in os.listdir(self.facilityPath):
+            for folder in os.listdir(os.path.join(self.facilityPath,section)):
+                foundCoverSheet = False
+                for file in os.listdir(os.path.join(self.facilityPath,section,folder)):
+                    if file == "Cover Sheet.pdf":
+                        foundCoverSheet = True
+                try:
+                    self.assertTrue(foundCoverSheet == True)
+                except Exception as e:
+                    print(e)
+                    print("Cover Sheet not found in folder:",section,folder)
+
+
 
 testIfReadyToPackage = Packaging()
 testIfReadyToPackage.setUp()
+
+
+
+
+
 

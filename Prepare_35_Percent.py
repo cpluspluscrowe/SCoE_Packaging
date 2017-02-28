@@ -81,6 +81,25 @@ class TogManager():
         specPath = os.path.join(pathToTOGS,"SPEC")
         for file in os.listdir(specPath):
             changeFileName(specPath,file)
+
+    def getFacilityList(self):
+        self.facList = []
+        self.facPath = r"C:\Pkgs\Facilities"
+        for section in os.listdir(self.facPath):
+            for folder in os.listdir(os.path.join(self.facPath,section)):
+                facName = folder.split(" - ")[0]
+                self.facList.append(facName)
+
+    def getAdditionalCoverSheets(self):
+        self.getFacilityList()
+        additionalFolder = r"C:\Pkgs\Additional 35% Design"
+        for root,dirs,files in os.walk(additionalFolder):
+            for file in files:
+                if "Cover Sheet.pdf" in file:
+                    parentPath = root
+                    
+                    
+            
 class Group():
     def __init__(self,name,facilityList):
         self.name = name
