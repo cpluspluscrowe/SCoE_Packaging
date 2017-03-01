@@ -16,7 +16,7 @@ def changeFileName(parentDirectory,file):
 
 
 def changePdfNames():
-    drawingsPdfPath = r"C:\Pkgs\Drawings\PDF"
+    drawingsPdfPath = r"C:\Pkgs\Drawings"
     for root,dirs,files in os.walk(drawingsPdfPath):
         for file in files:
             if ".pdf" in file:
@@ -40,6 +40,9 @@ class TogManager():
         self.togFolder = r"C:\JCMS\DATA_FILES\TOGS"
         self.copyTogs = self.togs
         self.cnt = 0
+        self.additionalFolder = r"C:\Pkgs\Additional 35% Design"
+        self.vettingFolder = r"C:\Pkgs\Vetting"
+        self.facilityPath = r"C:\Pkgs\Facilities"
     def moveTogFolder(self):
         destination = r"C:\Pkgs\TOGS"
         if os.path.isdir(destination):
@@ -112,7 +115,35 @@ class TogManager():
         for root,dirs,files in os.walk(additionalFolder):
             for file in files:
                 if "Cover Sheet.pdf" in file:
-                    self.coverSheetPaths.append(os.path.join(root,file))                    
+                    self.coverSheetPaths.append(os.path.join(root,file))
+
+    def getAndStoreConceptFolderList(self):
+        self.conceptFolderList = set()
+        self.appendConceptFolderList(self.additionalFolder)
+        self.appendConceptFolderList(self.vettingFolder)
+
+    def appendConceptFolderList(self,path):
+        for root,dirs,files in os.walk(path):
+            for d in dirs:
+                if d == "Concept Drawings":
+                    self.conceptFolderList.add(os.path.join(root,d))
+
+    def moveConceptualDrawingFolders(self):
+        """
+        Moves concept drawings from their additional/vetting folder to the correct corresponding
+            facility location
+        self.conceptFolderList should be empty at the completion of the function
+        """
+        for conceptFolderPath in list(self.conceptFolderList):
+            parent = re.sub(' (.+)|_Empty', '', os.path.basename(os.path.dirname(conceptFolderPath)))
+            fileName = os.path.basename(conceptFolderPath)
+            for root,dirs,files in os.walk(self.facilityPath):
+                for d in dirs:
+                    if self.isDirectoryAFacility(d):
+                        if parent in d:
+                            if not os.path.isdir(os.path.join(root,d,fileName)):
+                                shutil.copytree(conceptFolderPath,os.path.join(root,d,fileName))
+                            self.conceptFolderList.remove(conceptFolderPath)
                             
 class Group():
     def __init__(self,name,facilityList):
@@ -133,7 +164,8 @@ class Group():
                     if not os.path.isdir(os.path.join(self.folderPath,self.name,d)):
                         shutil.copytree(os.path.join(root,d),os.path.join(self.folderPath,self.name,d))
                     if os.path.isdir(os.path.join(root,d)):
-                        shutil.rmtree(os.path.join(root,d))
+                        if os.path.join(root,d) != os.path.join(self.folderPath,self.name,d):
+                            shutil.rmtree(os.path.join(root,d))
     def removeEmptyFolders(self):
         tm = TogManager()
         for folder in os.listdir(self.folderPath):
@@ -157,14 +189,23 @@ def createGroups():
     app1.quit()
 
 def main():
+    """
+    Prepares the folders for packaging
+    """
     changePdfNames()
     togManager = TogManager()
     togManager.moveTogFolder()
     togManager.deleteExtraFacilities()
     togManager.changeTogNames()
     createGroups()
+    togManager.getCoverSheets()
+    togManager.moveAdditionalCoverSheets()
+    togManager.getCoverSheets(r"C:\Pkgs\Vetting")
+    togManager.moveAdditionalCoverSheets()
+    togManager.getAndStoreConceptFolderList()
+    togManager.moveConceptualDrawingFolders()
 
 
-
-
+if __name__ == "__main__":
+    main()
 

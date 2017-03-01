@@ -23,6 +23,13 @@ class Packaging(unittest.TestCase):
         self.moveCoverSheetsAdditionalTest()
         self.moveCoverSheetsVettingTest()
         self.eachFileHasCoverSheet()
+        self.checkIfAdditionalPercentFolderIsPresent()
+        self.checkIfVettingFolderIsPresent()
+        self.getAndStoreConceptFolderListTest()
+        self.checkContentsOfConceptFolderList()
+        self.IsConceptFolderListEmptyAfterFunction()
+        self.checkIfAdditionalFolderExists()
+        self.checkIfVettingFolderExists()
         print("Done!")
         sys.exit(0)
     def checkIfDrawingFolderExists(self):
@@ -132,7 +139,57 @@ class Packaging(unittest.TestCase):
         tm.getCoverSheets(r"C:\Pkgs\Vetting")
         tm.moveAdditionalCoverSheets()
 
+    def checkIfAdditionalPercentFolderIsPresent(self):
+        self.assertTrue(os.path.isdir(r"C:\Pkgs\Additional 35% Design"))
         
+    def checkIfVettingFolderIsPresent(self):
+        self.assertTrue(os.path.isdir(r"C:\Pkgs\Vetting"))
+
+    def getAndStoreConceptFolderListTest(self):
+        tm = TogManager()
+        tm.getAndStoreConceptFolderList()
+        try:
+            self.assertTrue(len(tm.conceptFolderList) > 0)
+        except Exception as e:
+            print(e)
+            print("getAndStoreConceptFolderList did not fill the self.conceptFolderList")
+            
+    def checkContentsOfConceptFolderList(self):
+        tm = TogManager()
+        tm.getAndStoreConceptFolderList()
+        for concept in tm.conceptFolderList:
+            fileName = os.path.basename(concept)
+            try:
+                self.assertTrue(fileName == "Concept Drawings")
+            except Exception as e:
+                print(e)
+                print("self.conceptFolderList contains an filepath whose base item's name is not Concept Drawing")
+
+    def IsConceptFolderListEmptyAfterFunction(self):
+        tm = TogManager()
+        tm.getAndStoreConceptFolderList()
+        tm.moveConceptualDrawingFolders()
+        try:
+            self.assertTrue(not tm.conceptFolderList)#i.e. list is empty
+        except Exception as e:
+            print(e)
+            print("Not all concept folders were moved",tm.conceptFolderList)
+
+    def checkIfAdditionalFolderExists(self):
+        try:
+            self.assertTrue(os.path.isdir(r"C:\Pkgs\Additional 35% Design"))
+        except Exception as e:
+            print(e)
+            print("Need to include the Additional Design Folder from which we get Cover Sheets and Concept Drawings Folder")
+    def checkIfVettingFolderExists(self):
+        try:
+            self.assertTrue(os.path.isdir(r"C:\Pkgs\Vetting"))
+        except Exception as e:
+            print(e)
+            print("Need to include the Vetting Folder from which we get Cover Sheets and Concept Drawings Folder")
+
+
+
 
 testIfReadyToPackage = Packaging()
 testIfReadyToPackage.setUp()
