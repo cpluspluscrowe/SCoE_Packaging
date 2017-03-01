@@ -188,6 +188,18 @@ def createGroups():
     wb.close()
     app1.quit()
 
+def changeDrawingStructure():
+    drawingFolder = r"C:\Pkgs\Drawings"
+    pdfPath = r"C:\Pkgs\Drawings\PDF"
+    if not os.path.isdir(pdfPath):
+        os.mkdir(pdfPath)
+    for root,dirs,files in os.walk(drawingFolder):
+        for file in files:
+            if ".pdf" in file and not ".lnk" in file:
+                if os.path.join(root,file) != os.path.join(pdfPath,file):
+                    shutil.copyfile(os.path.join(root,file),os.path.join(pdfPath,file))
+                
+
 def main():
     """
     Prepares the folders for packaging
@@ -204,8 +216,36 @@ def main():
     togManager.moveAdditionalCoverSheets()
     togManager.getAndStoreConceptFolderList()
     togManager.moveConceptualDrawingFolders()
+    changeDrawingStructure()
 
+def AfterPackagingCode35Percent():
+    facilityPath = r"C:\Pkgs\Facilities"
+    for root,dirs,files in os.walk(facilityPath):
+        for d in dirs:
+            if d == "Drawings":
+                animationPath = os.path.join(root,d,"Animations")
+                dwgPath = os.path.join(root,d,"DWG")
+                if os.path.isdir(animationPath):
+                    shutil.rmtree(animationPath)
+                if os.path.isdir(dwgPath):
+                    shutil.rmtree(dwgPath)
+            if d == "TOGS":
+                secPath = os.path.join(root,d,"SEC")
+                pdfPath = os.path.join(root,d,"PDF")
+                if os.path.isdir(secPath):
+                    shutil.rmtree(secPath)
+                if os.path.isdir(pdfPath):
+                    shutil.rmtree(pdfPath)
+    
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
 
