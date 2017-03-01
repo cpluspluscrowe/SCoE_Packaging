@@ -3,6 +3,7 @@ import shutil
 from xlwings import *
 import xlwings as xw
 from pprint import pprint
+import re
 
 def changeFileName(parentDirectory,file):
     if not "35%_" in file:
@@ -90,16 +91,29 @@ class TogManager():
                 facName = folder.split(" - ")[0]
                 self.facList.append(facName)
 
-    def getAdditionalCoverSheets(self):
-        self.getFacilityList()
-        additionalFolder = r"C:\Pkgs\Additional 35% Design"
+    def isDirectoryAFacility(self,directory):
+        return any([s for s in self.togs if s in directory])
+
+    def moveAdditionalCoverSheets(self):
+        for coverSheet in self.coverSheetPaths:
+            parent = re.sub(' (.+)|_Empty', '', os.path.basename(os.path.dirname(coverSheet)))
+            #.split(" (")[0]
+            coverSheetPdfName = os.path.basename(coverSheet)
+            facilityPath = r"C:\Pkgs\Facilities"
+            for root,dirs,files in os.walk(facilityPath):
+                for d in dirs:
+                    if self.isDirectoryAFacility(d):
+                        if parent in d:
+                            shutil.copyfile(coverSheet,os.path.join(root,d,coverSheetPdfName))
+        
+    def getCoverSheets(self,additionalFolder = r"C:\Pkgs\Additional 35% Design"):
+        self.getFacilityList()#Creates a list of facilities
+        self.coverSheetPaths = []
         for root,dirs,files in os.walk(additionalFolder):
             for file in files:
                 if "Cover Sheet.pdf" in file:
-                    parentPath = root
-                    
-                    
-            
+                    self.coverSheetPaths.append(os.path.join(root,file))                    
+                            
 class Group():
     def __init__(self,name,facilityList):
         self.name = name

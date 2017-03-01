@@ -18,9 +18,13 @@ class Packaging(unittest.TestCase):
         self.checkIfAnimationsFolderExistsOrHasBeenCreated()
         self.checkchangeFileNameFunction()
         self.checkchangeFileNameFunction65Percent()
+        self.IsDirectoryAFacilityTest()
+        self.getAdditionalCoverSheets()
+        self.moveCoverSheetsAdditionalTest()
+        self.moveCoverSheetsVettingTest()
         self.eachFileHasCoverSheet()
         print("Done!")
-        self.assertEqual(3,4)
+        sys.exit(1)
     def checkIfDrawingFolderExists(self):
         self.drawingsPath = os.path.join(self.packagePath,"Drawings")
         try:
@@ -92,10 +96,59 @@ class Packaging(unittest.TestCase):
                     print(e)
                     print("Cover Sheet not found in folder:",section,folder)
 
+    def IsDirectoryAFacilityTest(self):
+        tm = TogManager()
+        for tog in tm.togs:
+            self.assertTrue(tm.isDirectoryAFacility(tog))
+        self.assertTrue(not tm.isDirectoryAFacility(''))
 
+    def moveCoverSheetTest(self):
+        coverSheetPath = r"C:\Users\CCrowe\Documents\AFCS Folder\Tests\Cover Sheet.pdf"
+        getAdditionalCoverSheets(r"C:\Users\CCrowe\Documents\AFCS Folder\Tests")
+
+    def getAdditionalCoverSheets(self):
+        tm = TogManager()
+        tm.getCoverSheets()
+        try:
+            self.assertTrue(len(tm.coverSheetPaths) > 0)
+        except Exception as e:
+            print(e)
+            print("additionalCoverSheetPaths list is empty, was not filled from getAdditionalCoverSheets")
+        for coverSheetPath in tm.coverSheetPaths:
+            file = os.path.basename(coverSheetPath)
+            try:
+                self.assertTrue(file == "Cover Sheet.pdf")
+            except Exception as e:
+                print(e)
+                print("Cover Sheet name is wrong:",file)
+
+    def moveCoverSheetsAdditionalTest(self):
+        tm = TogManager()
+        tm.getCoverSheets()
+        tm.moveAdditionalCoverSheets()
+
+    def moveCoverSheetsVettingTest(self):
+        tm = TogManager()
+        tm.getCoverSheets(r"C:\Pkgs\Vetting")
+        tm.moveAdditionalCoverSheets()
+
+        
 
 testIfReadyToPackage = Packaging()
 testIfReadyToPackage.setUp()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
