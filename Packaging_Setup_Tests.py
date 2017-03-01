@@ -24,7 +24,7 @@ class Packaging(unittest.TestCase):
         self.moveCoverSheetsVettingTest()
         self.eachFileHasCoverSheet()
         print("Done!")
-        sys.exit(1)
+        sys.exit(0)
     def checkIfDrawingFolderExists(self):
         self.drawingsPath = os.path.join(self.packagePath,"Drawings")
         try:
