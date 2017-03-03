@@ -4,6 +4,8 @@ from xlwings import *
 import xlwings as xw
 from pprint import pprint
 import re
+import unittest
+import time
 
 def changeFileName(parentDirectory,file):
     if not "35%_" in file:
@@ -127,6 +129,101 @@ class TogManager():
             for d in dirs:
                 if d == "Concept Drawings":
                     self.conceptFolderList.add(os.path.join(root,d))
+    def containsNumber(self,inputString):
+        return any(char.isdigit() for char in inputString)
+
+    def getExcelPath(self,folder):
+        for root,dirs,files in os.walk(folder):
+            for file in files:
+                if ".xls" in file:
+                    return os.path.join(root,file)
+
+    def addConceptDrawingToExcel(self,ConceptDrawingName,ExcelFilePath):
+        splitName = ConceptDrawingName.replace("35%_","").replace(".pdf","").split(" - ")
+        if len(splitName) == 2:
+            ConceptDrawingName = splitName[0]
+            Description = splitName[1]
+        else:# len(splitName) != 2:
+            splitName = ConceptDrawingName.replace("35%_","").replace(".pdf","").split(" ")
+            ConceptDrawingName = splitName[0]
+            Description = splitName[1] + " " + splitName[2]
+        print(splitName)
+        print("\t'" + ConceptDrawingName + "'")
+        print("\t'" + Description + "'")
+        app1 = xw.App()
+        wb = xw.apps.active.books.open(ExcelFilePath)
+        sht = wb.sheets["Facility"]
+        rowcnt = 2
+        conceptDrawingAlreadyOnSheet = False
+        while(sht.range('C' + str(rowcnt)).value != None):
+            if sht.range('C' + str(rowcnt)).value == ConceptDrawingName and sht.range('D' + str(rowcnt)).value == Description:
+                conceptDrawingAlreadyOnSheet = True
+                break
+            rowcnt += 1
+        if conceptDrawingAlreadyOnSheet == False:
+            sht.range('C' + str(rowcnt)).value = ConceptDrawingName
+            sht.range('D' + str(rowcnt)).value = Description
+            sht.range('C1:C' + str(rowcnt)).autofit()
+            sht.range('D1:D' + str(rowcnt)).autofit()
+        wb.save()
+        wb.close()
+        app1.quit()
+    def getFileContainingNumber(self,files,number):
+        for file in files:
+            if str(number) in file:
+                return file
+
+    def getMatch(self,full,part):
+        for file in full:
+            splitName = file.replace("35%_","").replace(".pdf","").split(" - ")
+            if len(splitName) == 2:
+                Description = splitName[1]
+            else:
+                splitName = file.replace("35%_","").replace(".pdf","").split(" ")
+                Description = splitName[1] + " " + splitName[2]
+            if part == Description:
+                return file
+
+    def putFilesInAlphabeticalOrder(self,files):
+        if files:
+            descriptionList = []
+            for file in files:
+                splitName = file.replace("35%_","").replace(".pdf","").split(" - ")
+                if len(splitName) == 2:
+                    Description = splitName[1]
+                else:
+                    splitName = file.replace("35%_","").replace(".pdf","").split(" ")
+                    Description = splitName[1] + " " + splitName[2]
+                descriptionList.append(Description)
+            filesLength = len(files)
+            descriptionList.sort(reverse=True)
+            print(descriptionList)
+            newList = []
+            for file in descriptionList:
+                if not self.containsNumber(file):
+                    newList.append(file)
+                    descriptionList.remove(file)
+            for i in range(len(descriptionList)):
+                file = self.getFileContainingNumber(descriptionList,i)
+                if file:
+                    newList.append(file)
+                    descriptionList.remove(file)
+            for leftover in descriptionList:
+                newList.append(leftover)
+            print(newList)
+            fullNameList = []
+            for file in newList:
+                match = self.getMatch(files,file)
+                fullNameList.append(match)
+
+            tc = unittest.TestCase('__init__')
+            try:
+                tc.assertTrue(filesLength == len(fullNameList))#mini test in the code
+            except Exception as e:
+                print(e)
+            #fullNameList.reverse()
+            return fullNameList
+        return files
 
     def moveConceptualDrawingFolders(self):
         """
@@ -141,10 +238,71 @@ class TogManager():
                 for d in dirs:
                     if self.isDirectoryAFacility(d):
                         if parent in d:
+                            excelPath = self.getExcelPath(os.path.join(root,d))
                             if not os.path.isdir(os.path.join(root,d,fileName)):
-                                shutil.copytree(conceptFolderPath,os.path.join(root,d,fileName))
+                                destination = os.path.join(root,d,"Drawings","PDF",fileName)
+                                pdfFolder = os.path.join(root,d,"Drawings","PDF")
+                                if not os.path.isdir(destination):
+                                    shutil.copytree(conceptFolderPath,destination)
+                                length = len(os.listdir(destination))
+                                cnt = 0
+                                orderedFiles = self.putFilesInAlphabeticalOrder(os.listdir(destination))
+                                for file in orderedFiles:
+                                    print(d)
+                                    self.addConceptDrawingToExcel(file,excelPath)
+                                    if not os.path.isfile(os.path.join(pdfFolder,file)):
+                                        shutil.move(os.path.join(destination,file),os.path.join(pdfFolder,file))
+                                        cnt += 1
+                                    if os.path.isfile(os.path.join(destination,file)):
+                                        if os.path.isfile(os.path.join(pdfFolder,file)):
+                                            os.remove(os.path.join(destination,file))
+                                            cnt += 1
+                                        else:
+                                            print("File was not moved")
+                                os.rmdir(destination)#should be empty, so no error
+                                
+                                tc = unittest.TestCase('__init__')
+                                tc.assertTrue(cnt == length)#mini test in the code
+                                
                             self.conceptFolderList.remove(conceptFolderPath)
-                            
+
+    def getExcelPath(self,folder):
+        for root,dirs,files in os.walk(folder):
+            for file in files:
+                if ".xls" in file:
+                    return os.path.join(root,file)
+
+    def addConceptDrawingToExcel(self,ConceptDrawingName,ExcelFilePath):
+        splitName = ConceptDrawingName.replace("35%_","").replace(".pdf","").split(" - ")
+        if len(splitName) == 2:
+            ConceptDrawingName = splitName[0]
+            Description = splitName[1]
+        else:# len(splitName) != 2:
+            splitName = ConceptDrawingName.replace("35%_","").replace(".pdf","").split(" ")
+            ConceptDrawingName = splitName[0]
+            Description = splitName[1] + " " + splitName[2]
+        print(splitName)
+        print("\t'" + ConceptDrawingName + "'")
+        print("\t'" + Description + "'")
+        app1 = xw.App()
+        wb = xw.apps.active.books.open(ExcelFilePath)
+        sht = wb.sheets["Facility"]
+        rowcnt = 2
+        conceptDrawingAlreadyOnSheet = False
+        while(sht.range('C' + str(rowcnt)).value != None):
+            if sht.range('C' + str(rowcnt)).value == ConceptDrawingName and sht.range('D' + str(rowcnt)).value == Description:
+                conceptDrawingAlreadyOnSheet = True
+                break
+            rowcnt += 1
+        if conceptDrawingAlreadyOnSheet == False:
+            sht.range('C' + str(rowcnt)).value = ConceptDrawingName
+            sht.range('D' + str(rowcnt)).value = Description
+            sht.range('C1:C' + str(rowcnt)).autofit()
+            sht.range('D1:D' + str(rowcnt)).autofit()
+        wb.save()
+        wb.close()
+        app1.quit()
+    
 class Group():
     def __init__(self,name,facilityList):
         self.name = name
@@ -198,7 +356,7 @@ def changeDrawingStructure():
             if ".pdf" in file and not ".lnk" in file:
                 if os.path.join(root,file) != os.path.join(pdfPath,file):
                     shutil.copyfile(os.path.join(root,file),os.path.join(pdfPath,file))
-                
+                 
 
 def main():
     """
